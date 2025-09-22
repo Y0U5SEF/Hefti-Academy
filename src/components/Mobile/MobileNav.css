@@ -1,0 +1,212 @@
+.mobile-nav-wrapper {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  width: 50%;
+  height: 100%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+  z-index: 101;
+  transition: transform 0.5s ease;
+  transform: translateX(-100%);
+  @apply bg-primary font-arabic;
+}
+
+[dir="rtl"] .mobile-nav-wrapper {
+  transform: translateX(100%);
+  left: auto;
+  right: 0;
+}
+[dir="ltr"] .mobile-nav-wrapper {
+  right: auto;
+  left: 0;
+}
+.mobile-nav-wrapper::before {
+  content: "";
+  background: url("assets/mahd_academy-white.webp");
+  height: 100%;
+  width: 100%;
+  position: absolute;
+  background-position: right;
+  background-position-y: 260px;
+  background-repeat: no-repeat;
+  opacity: 0.2;
+  pointer-events: none;
+}
+.mobile-nav-wrapper.open {
+  transform: translateX(0);
+}
+.nav-header {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+  background: #0000004a;
+}
+[dir="rtl"] .nav-header {
+  flex-direction: row-reverse;
+}
+.ribbon {
+  width: 100%;
+  background: linear-gradient(45deg, #f4ce14, cyan);
+  height: 5px;
+}
+.Mobile_nav_toggler {
+  padding: 7px;
+  @apply text-white;
+  outline: none;
+  background: transparent;
+  font-size: 26px;
+  cursor: pointer;
+  border-radius: 100%;
+  border: 2px solid #ffffff;
+}
+.close-button {
+  @apply text-white;
+  background-color: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  flex-wrap: nowrap;
+  width: max-content;
+  padding: 20px;
+}
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+  @apply text-white;
+}
+.nav-menu a {
+  @apply text-white;
+  display: block;
+  padding: 10px 15px;
+  font-weight: 300;
+}
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: nowrap;
+  border-bottom: 1px solid #dddddd29;
+}
+.nav-item:first-child {
+  border-top: 1px solid #dddddd29;
+}
+.sub-menu-cont {
+  display: flex;
+  width: 100%;
+  justify-content: space-between;
+}
+.nav-item.has-children .sub-menu a {
+  position: relative;
+}
+[dir="rtl"] .nav-item.has-children .sub-menu a::before {
+  right: auto;
+  left: 0;
+  border-color: transparent transparent #dddddd29 #dddddd29;
+}
+[dir="ltr"] .nav-item.has-children .sub-menu a::before {
+  left: auto;
+  right: 0;
+  border-color: transparent #dddddd29 #dddddd29 transparent;
+}
+.social-links {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  display: flex;
+  justify-content: center;
+}
+.social-links a {
+  margin: 0 10px;
+  color: #333;
+  text-decoration: none;
+}
+.nav-item > a {
+  text-decoration: none;
+}
+.sub-menu-toggle {
+  width: max-content;
+  padding: 0 30px;
+  margin: 0;
+  background-color: transparent;
+  border: none;
+  font-size: 16px;
+  cursor: pointer;
+  display: inline-block;
+}
+.sub-menu {
+  list-style-type: none;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  width: 100%;
+}
+.sub-menu li {
+  border-bottom: 1px solid #dddddd29;
+}
+[dir="rtl"] .sub-menu li a {
+  margin-right: 1em;
+  margin-left: 0;
+}
+[dir="ltr"] .sub-menu li a {
+  margin-left: 1em;
+  margin-right: 0;
+}
+.sub-menu li:last-child {
+  border: none;
+}
+.nav-item.open .sub-menu {
+  max-height: 500px;
+  transition: max-height 0.3s ease-in;
+}
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  visibility: hidden;
+  z-index: 101;
+  transition: opacity 0.5s ease-in-out, visibility 0.3s ease-in-out;
+}
+.overlay.visible {
+  visibility: visible;
+  opacity: 1;
+  /* backdrop-filter: blur(2px) saturate(0); */
+  background: #00000075;
+}
+.nav-container {
+  flex: 0 0 85%;
+}
+.social-icons {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 0.5rem 0;
+}
+.social-link {
+  text-decoration: none;
+  @apply text-white;
+  font-size: 1.5rem;
+  transition: color 0.3s ease-in-out;
+}
+.nav-header {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  justify-content: space-between;
+  background: #0000004a;
+}
+.mobile-nav-wrapper .language-selector {
+  margin-right: auto;
+}
+@media (min-width: 1024px) {
+  .mobile-nav-wrapper {
+    display: none;
+  }
+}

@@ -1,0 +1,174 @@
+header {
+  font-weight: 100;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  @apply font-arabic text-lg;
+  padding: 0 10%;
+}
+
+/* RTL/LTR specific styles for nav list */
+nav ul.nav_list {
+  display: flex;
+  gap: 25px;
+}
+
+[dir="rtl"] nav ul.nav_list {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.nav_item {
+  position: relative;
+  padding: 25px 0;
+}
+
+/* Dropdown positioning for RTL/LTR */
+.dropdown {
+  position: absolute;
+  top: 80%;
+  display: none;
+  opacity: 0;
+  /* width: max-content; */
+  z-index: 10;
+}
+
+/* .dropdown::before {
+  --width: 5px;
+  content: "";
+  position: absolute;
+  border-width: var(--width);
+  width: calc(var(--width) * 2);
+  border-style: solid;
+  bottom: 100%;
+  border-color: transparent transparent white transparent;
+  left: 5px;
+  box-sizing: border-box;
+} */
+
+/* [dir="rtl"] .dropdown::before {
+  right: 5px;
+} */
+
+/* RTL dropdown positioning */
+[dir="rtl"] .dropdown {
+  right: 0;
+  right: auto;
+  /* padding: 0.5rem 0.5rem 0.5rem 3rem; */
+}
+
+/* LTR dropdown positioning */
+[dir="ltr"] .dropdown {
+  left: 0;
+  left: auto;
+  /* padding: 0.5rem 3rem 0.5rem 0.5rem; */
+}
+
+/* Dropdown animation */
+ul.nav_list li:hover ul.dropdown {
+  display: flex;
+  flex-direction: column;
+  opacity: 1;
+  animation: translateY 0.3s ease backwards;
+}
+
+/* Arrow icon animation */
+.arrow-ic {
+  transition: transform 0.5s;
+}
+
+[dir="rtl"] .arrow-ic {
+  margin-right: 0.2rem;
+  margin-left: 0;
+  transform: rotate(0deg);
+}
+
+[dir="ltr"] .arrow-ic {
+  margin-left: 0.2rem;
+  margin-right: 0;
+  transform: rotate(0deg);
+}
+
+/* Arrow rotation on hover */
+[dir="rtl"] ul.nav_list li:hover .arrow-ic {
+  transform: rotate(-180deg);
+}
+
+[dir="ltr"] ul.nav_list li:hover .arrow-ic {
+  transform: rotate(180deg);
+}
+
+/* Navigation links */
+nav ul.nav_list li a {
+  font-weight: normal;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Submenu icon container */
+.submenu_icon {
+  display: flex;
+  align-items: center;
+}
+
+/* Animation keyframes with RTL support */
+@keyframes translateY {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideDown {
+  0% {
+    transform: translateY(-100px);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Responsive styles */
+@media (max-width: 767px) {
+  .Main_Nav,
+  .register-btn {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .Main_Nav,
+  .register-btn {
+    display: none;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 18px;
+  }
+
+  /* Add smooth transitions for language switches */
+  header {
+    transition: all 0.3s ease;
+  }
+
+  nav ul.nav_list {
+    transition: all 0.3s ease;
+  }
+}
+
+.logo img.HeftiLogo {
+    height: 90px;
+    padding: 10px 0;
+}

@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: theme(colors.primary);
+  --secondary: theme(colors.secondary);
+  --white: theme(colors.white);
+  --black: theme(colors.black);
+}
+
+.slideshow-container {
+  direction: ltr;
+}
+
+/* .slideshow-title {
+  background: red;
+  width: max-content;
+  padding: 0.5rem 1rem;
+  clip-path: polygon(5% 0%, 100% 0%, 95% 100%, 0% 100%);
+} */
+
+.slideshow-title {
+  width: 50%;
+  backdrop-filter: blur(1px);
+}
+
+[dir="rtl"] .slideshow-title {
+  background: linear-gradient(-90deg, #00000050, transparent);
+}
+
+[dir="ltr"] .slideshow-title {
+  background: linear-gradient(90deg, #00000050, transparent);
+}
+
+.slideshow-desc {
+  background: linear-gradient(-90deg, #0000008c, transparent);
+  padding: 1rem;
+  backdrop-filter: blur(3px);
+  margin-right: 2%;
+}
+
+/* Mobile (small devices, phones) */
+@media (max-width: 767px) {
+  /* .slideshow-desc {
+    width: 98%;
+  }
+  .slideshow-cont {
+    bottom: 10% !important;
+    width: 100% !important;
+  } */
+  .slideshow-title {
+    width: 100%;
+  }
+}
+
+/* Tablet (medium devices, tablets) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .slideshow-desc {
+    width: 50%;
+  }
+}
+
+/* Desktop (large devices, desktops) */
+@media (min-width: 1024px) {
+  .slideshow-desc {
+    width: 50%;
+  }
+}
+
+.slideshow-cont {
+  bottom: 20%;
+  /* direction: rtl;
+  bottom: 15%;
+  width: 70%;
+  margin: 0 auto; */
+}
+
+[dir="rtl"] .slideshow-cont {
+  direction: rtl;
+}
+
+[dir="ltr"] .slideshow-cont {
+  direction: ltr;
+}
+
+/* .slideshow-container::before {
+  content: "";
+  position: absolute;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  z-index: 2;
+  background: linear-gradient(0deg, var(--primary) 0%, transparent 50%);
+} */
+.slide-overlay {
+  content: "";
+  height: 100%;
+  width: 100%;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background-image: radial-gradient(transparent 1px, var(--primary) 1px);
+  background-size: 3px 3px;
+  -webkit-backdrop-filter: blur(5px);
+  backdrop-filter: blur(5px);
+  -webkit-mask: linear-gradient(0deg, rgb(0, 0, 0) 0%, rgba(0, 0, 0, 0) 50%);
+  mask: linear-gradient(0deg, rgb(0, 0, 0) 0%, rgba(0, 0, 0, 0) 50%);
+  opacity: 1;
+}

@@ -1,0 +1,7 @@
+.ltr {
+  direction: ltr !important;
+}
+
+[dir="rtl"] .footer-contact span {
+  margin-right: 10px !important;
+}

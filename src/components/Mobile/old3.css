@@ -1,0 +1,174 @@
+/* MobileNav.css */
+
+/* Overlay */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+  z-index: 999; /* Ensure it's above other content */
+}
+
+.overlay.visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Mobile Nav Wrapper */
+.mobile-nav-wrapper {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 250px;
+  height: 100%;
+  background: #fff;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  will-change: transform; /* Hint browser for optimization */
+  z-index: 1000; /* Ensure it's above the overlay */
+}
+
+.mobile-nav-wrapper.open {
+  transform: translateX(0);
+}
+
+/* Language-specific classes */
+.mobile-nav-wrapper.lang-fr {
+  /* Add styles for French language if needed */
+}
+
+.mobile-nav-wrapper.lang-ar {
+  /* Add styles for Arabic language if needed */
+}
+
+/* Nav Header */
+.nav-header {
+  padding: 16px;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.flex {
+  display: flex;
+}
+
+.items-center {
+  align-items: center;
+}
+
+.gap-4 {
+  gap: 16px;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.justify-between {
+  justify-content: space-between;
+}
+
+.ribbon {
+  flex-grow: 1;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.close-button i {
+  font-size: 20px;
+}
+
+/* Nav Container */
+.nav-container {
+  padding: 16px;
+  overflow-y: auto;
+  height: calc(100% - 120px); /* Adjust based on header/footer height */
+}
+
+/* Nav Menu */
+.nav-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  margin-bottom: 8px;
+}
+
+.nav-item.has-children {
+  position: relative;
+}
+
+.sub-menu-cont {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.sub-menu-toggle {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+}
+
+.sub-menu-toggle i {
+  font-size: 16px;
+  transition: transform 0.3s ease-in-out;
+}
+
+.nav-item.open .sub-menu-toggle i {
+  transform: rotate(180deg);
+}
+
+/* Sub Menu */
+.sub-menu {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-in-out;
+}
+
+.nav-item.open .sub-menu {
+  max-height: 500px; /* Adjust based on content */
+}
+
+.sub-menu li {
+  padding: 8px 0;
+}
+
+.sub-menu a {
+  text-decoration: none;
+}
+
+/* Social Icons */
+.social-icons {
+  position: absolute;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+
+.social-link {
+  color: #333;
+  text-decoration: none;
+}
+
+.social-link i {
+  font-size: 24px;
+}

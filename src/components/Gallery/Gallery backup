@@ -1,0 +1,578 @@
+import React, { useState, useEffect, useCallback } from "react";
+import { motion } from "framer-motion";
+import { useLanguage } from "../../context/LanguageContext";
+import { PageTitle, PageContainer, ContentContainer } from "../PageComponents";
+import axios from "axios";
+import "./Gallery.css";
+
+const Gallery = () => {
+  const [selectedImage, setSelectedImage] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [galleryStructure, setGalleryStructure] = useState({
+    root: [],
+    categories: {}
+  });
+  // Temporarily disabled date sorting
+  // const [sortOrder, setSortOrder] = useState('newest'); // 'newest' or 'oldest'
+  const [visibleImages, setVisibleImages] = useState(new Set());
+  const { language = "en", dir = "ltr" } = useLanguage() || {};
+
+  // Constants for Google Sheet API
+  const SHEET_ID = "1M7Up4HySa9rRszY7ySHbBV_1rJLU2--W0WwrXGG_PP0";
+  const OPENSHEET_API = "https://opensheet.elk.sh";
+  const IMAGE_BASE_PATH = "/images/gallery/";
+  const THUMBNAIL_PATH = "/images/gallery/thumbnails/";
+  
+  // Intersection Observer for lazy loading - optimized to not recreate on every galleryStructure change
+  const observerRef = React.useRef(null);
+  
+  useEffect(() => {
+    // Only create the observer once
+    if (!observerRef.current) {
+      observerRef.current = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const imagePath = entry.target.dataset.src;
+              setVisibleImages((prev) => new Set([...prev, imagePath]));
+              observerRef.current.unobserve(entry.target);
+            }
+          });
+        },
+        {
+          rootMargin: "200px", // Increased for better preloading
+          threshold: 0.1
+        }
+      );
+    }
+    
+    // Observer setup after DOM update
+    const setupObserver = () => {
+      document.querySelectorAll('.image-placeholder').forEach((el) => {
+        observerRef.current.observe(el);
+      });
+    };
+    
+    // Use requestAnimationFrame to ensure DOM is ready
+    requestAnimationFrame(setupObserver);
+    
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [galleryStructure]);
+
+  // Function to check if image exists with caching
+  const imageExistsCache = React.useRef(new Map());
+  
+  const checkImageExists = useCallback(async (imagePath, thumbnailPath) => {
+    // Check for the main image
+    const mainImageKey = `main-${imagePath}`;
+    if (!imageExistsCache.current.has(mainImageKey)) {
+      try {
+        const response = await fetch(imagePath, { method: 'HEAD' });
+        imageExistsCache.current.set(mainImageKey, response.ok);
+      } catch {
+        imageExistsCache.current.set(mainImageKey, false);
+      }
+    }
+    
+    // Check for the thumbnail
+    const thumbnailKey = `thumb-${thumbnailPath}`;
+    if (!imageExistsCache.current.has(thumbnailKey)) {
+      try {
+        const response = await fetch(thumbnailPath, { method: 'HEAD' });
+        imageExistsCache.current.set(thumbnailKey, response.ok);
+      } catch {
+        imageExistsCache.current.set(thumbnailKey, false);
+      }
+    }
+    
+    // Return true if either the main image or thumbnail exists
+    return imageExistsCache.current.get(mainImageKey) || imageExistsCache.current.get(thumbnailKey);
+  }, []);
+
+  // Function to sort categories by order
+  const sortCategoriesByOrder = useCallback((categories) => {
+    const withOrder = [];
+    const withoutOrder = [];
+    
+    // Separate categories with and without order
+    Object.entries(categories).forEach(entry => {
+      if (entry[1].order && !isNaN(parseInt(entry[1].order))) {
+        withOrder.push(entry);
+      } else {
+        withoutOrder.push(entry);
+      }
+    });
+    
+    // Sort categories with order
+    const sortedWithOrder = withOrder.sort((a, b) => {
+      const orderA = parseInt(a[1].order) || 9999;
+      const orderB = parseInt(b[1].order) || 9999;
+      return orderA - orderB;
+    });
+    
+    // Combine sorted categories with order first, then categories without order
+    const sortedCategories = [...sortedWithOrder, ...withoutOrder];
+    
+    return Object.fromEntries(sortedCategories);
+  }, []);
+  
+  // We don't need a separate effect for re-sorting as we're already sorting when data is loaded
+
+  // Function to fetch gallery data from Google Sheets
+  useEffect(() => {
+    const loadGalleryImages = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axios.get(`${OPENSHEET_API}/${SHEET_ID}/Gallery`);
+        
+        if (!response.data || response.data.length === 0) {
+          console.error("No gallery data found in the Google Sheet");
+          setIsLoading(false);
+          return;
+        }
+        
+        const structure = {
+          root: [],
+          categories: {}
+        };
+
+        // Process images more efficiently
+        // Create a function to process all images with Promise.all for parallel existence checks
+        const processAllImages = async () => {
+          // First, filter out invalid entries
+          const validEntries = response.data.filter(image => 
+            image && image.imageUrl && image.imageUrl.trim() !== ''
+          );
+          
+          // Create an array of promises for checking image existence
+          const existenceChecks = validEntries.map(async (image) => {
+            const imagePath = IMAGE_BASE_PATH + image.imageUrl;
+            const thumbnailPath = THUMBNAIL_PATH + image.imageUrl;
+            const exists = await checkImageExists(imagePath, thumbnailPath);
+            
+            if (exists) {
+              return {
+                image,
+                imagePath,
+                imageObj: {
+                  path: imagePath,
+                  thumbnailPath: THUMBNAIL_PATH + image.imageUrl,
+                  name: image.name || image.imageUrl.split('.')[0] || "Image",
+                  category: image.category || "",
+                  categoryID: image.categoryID || "",
+                  description: image.description || "",
+                  fullPath: imagePath,
+                  filename: image.imageUrl,
+                  date: image.date || "",
+                  order: image.order || ""
+                }
+              };
+            }
+            return null;
+          });
+          
+          // Wait for all existence checks to complete
+          const results = await Promise.all(existenceChecks);
+          
+          // Process the valid images
+          results.filter(Boolean).forEach(({ imageObj }) => {
+            if (!imageObj.categoryID) {
+              structure.root.push(imageObj);
+            } else {
+              if (!structure.categories[imageObj.categoryID]) {
+                structure.categories[imageObj.categoryID] = {
+                  name: imageObj.category,
+                  date: imageObj.date,
+                  images: []
+                };
+              }
+              structure.categories[imageObj.categoryID].images.push(imageObj);
+            }
+          });
+          
+          // Sort images within each category by order
+          Object.keys(structure.categories).forEach(categoryId => {
+            const category = structure.categories[categoryId];
+            const imagesWithOrder = [];
+            const imagesWithoutOrder = [];
+            
+            // Separate images with and without order
+            category.images.forEach(image => {
+              if (image.order && !isNaN(parseInt(image.order))) {
+                imagesWithOrder.push(image);
+              } else {
+                imagesWithoutOrder.push(image);
+              }
+            });
+            
+            // Sort images with order
+            const sortedImagesWithOrder = imagesWithOrder.sort((a, b) => {
+              const orderA = parseInt(a.order) || 9999;
+              const orderB = parseInt(b.order) || 9999;
+              return orderA - orderB;
+            });
+            
+            // Replace category images with sorted images, keeping those without order at the end
+            category.images = [...sortedImagesWithOrder, ...imagesWithoutOrder];
+          });
+          
+          // Sort root images by order too
+          const rootImagesWithOrder = [];
+          const rootImagesWithoutOrder = [];
+          
+          structure.root.forEach(image => {
+            if (image.order && !isNaN(parseInt(image.order))) {
+              rootImagesWithOrder.push(image);
+            } else {
+              rootImagesWithoutOrder.push(image);
+            }
+          });
+          
+          const sortedRootImagesWithOrder = rootImagesWithOrder.sort((a, b) => {
+            const orderA = parseInt(a.order) || 9999;
+            const orderB = parseInt(b.order) || 9999;
+            return orderA - orderB;
+          });
+          
+          structure.root = [...sortedRootImagesWithOrder, ...rootImagesWithoutOrder];
+          
+          // Sort categories by order
+          structure.categories = sortCategoriesByOrder(structure.categories);
+          setGalleryStructure(structure);
+          setIsLoading(false);
+        };
+        
+        // Start processing all images
+        await processAllImages();
+      } catch (error) {
+        console.error("Failed to load gallery images from Google Sheets:", error);
+        setIsLoading(false);
+      }
+    };
+    
+    loadGalleryImages();
+  }, [checkImageExists, sortCategoriesByOrder]);
+
+  // Loading wheel component
+  const LoadingWheel = () => (
+    <div className="flex justify-center items-center min-h-[400px]">
+      <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-800"></div>
+    </div>
+  );
+
+  // Translations for gallery text
+  const translations = {
+    gallery: {
+      en: "Gallery",
+      ar: "معرض الصور",
+      fr: "Galerie"
+    },
+    sortBy: {
+      en: "Sort by:",
+      ar: "ترتيب حسب:",
+      fr: "Trier par:"
+    },
+    newest: {
+      en: "Newest",
+      ar: "الأحدث",
+      fr: "Plus récent"
+    },
+    oldest: {
+      en: "Oldest",
+      ar: "الأقدم",
+      fr: "Plus ancien"
+    }
+  };
+
+  return (
+    <PageContainer>
+      <PageTitle title={translations.gallery[language] || translations.gallery.en} />
+      <ContentContainer>
+        {isLoading ? (
+          <LoadingWheel />
+        ) : (
+          <>
+
+            {/* Root images without category */}
+            {galleryStructure.root.length > 0 && (
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6 mb-12">
+                {galleryStructure.root.map((image, index) => (
+                  <GalleryImage 
+                    key={`${image.path}-${index}`} 
+                    image={image} 
+                    index={index} 
+                    setSelectedImage={setSelectedImage} 
+                    dir={dir}
+                    visibleImages={visibleImages}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* Category images */}
+            {Object.entries(galleryStructure.categories).map(([categoryID, categoryData], categoryIndex) => (
+              <div key={categoryID} className="mb-12">
+                <h2 className={`text-2xl font-semibold mb-2 text-blue-800 ${
+                  dir === "rtl" ? "text-right" : "text-left"
+                }`}>
+                  {categoryData.name}
+                </h2>
+                {categoryData.date && (
+                  <p className={`text-gray-600 mb-6 ${
+                    dir === "rtl" ? "text-right" : "text-left"
+                  }`}>
+                    {categoryData.date}
+                  </p>
+                )}
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 md:gap-6">
+                  {categoryData.images.map((image, index) => (
+                    <GalleryImage 
+                      key={`${image.path}-${categoryIndex}-${index}`} 
+                      image={image} 
+                      index={index} 
+                      categoryIndex={categoryIndex}
+                      setSelectedImage={setSelectedImage}
+                      dir={dir}
+                      visibleImages={visibleImages}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            {/* Empty state message when no images */}
+            {galleryStructure.root.length === 0 && Object.keys(galleryStructure.categories).length === 0 && (
+              <div className="flex justify-center items-center h-64">
+                <p className="text-gray-500 text-lg">
+                  {language === "ar" ? "لا توجد صور للعرض" : 
+                   language === "fr" ? "Aucune image à afficher" : 
+                   "No images to display"}
+                </p>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* Image lightbox */}
+        {selectedImage && (
+          <ImageLightbox 
+            selectedImage={selectedImage} 
+            setSelectedImage={setSelectedImage} 
+          />
+        )}
+      </ContentContainer>
+    </PageContainer>
+  );
+};
+
+// Optimized GalleryImage component
+// Use a more aggressive equality check for React.memo to prevent unnecessary re-renders
+const GalleryImage = React.memo(({ image, index, categoryIndex = 0, setSelectedImage, dir, visibleImages }) => {
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(image.path);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = image.filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    }
+  };
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const shareData = {
+      title: 'Hefti Academy Gallery',
+      text: 'Check out this image from Hefti Academy!',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  // Only animate items that are visible in the viewport for better performance
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ 
+        duration: 0.3, 
+        // Reduce animation complexity and stagger delay
+        delay: Math.min((categoryIndex * 0.05) + (index * 0.02), 0.5)
+      }}
+      className="relative group cursor-pointer"
+      onClick={() => setSelectedImage(image)}
+    >
+      <div className="aspect-w-1 aspect-h-1 overflow-hidden rounded-lg">
+        {visibleImages.has(image.thumbnailPath) ? (
+          <img
+            src={image.thumbnailPath}
+            alt={image.name}
+            className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300"
+            loading="lazy"
+          />
+        ) : (
+          // This is the placeholder that appears before thumbnails load - currently rounded square shape.
+          // To make it a circle instead, replace 'rounded-lg' with 'rounded-full'
+          <div 
+            className="image-placeholder w-full h-full bg-gray-200 animate-pulse"
+            data-src={image.thumbnailPath}
+          />
+        )}
+        {image.description && (
+          <div className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-60 text-white p-2 text-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+            {image.description}
+          </div>
+        )}
+      </div>
+      <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <button
+          onClick={handleDownload}
+          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-colors duration-200"
+          title="Download"
+        >
+          <i className="fi fi-rr-download text-gray-700"></i>
+        </button>
+        <button
+          onClick={handleShare}
+          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-colors duration-200"
+          title="Share"
+        >
+          <i className="fi fi-rr-share text-gray-700"></i>
+        </button>
+      </div>
+    </motion.div>
+  );
+});
+
+// Separated lightbox component
+const ImageLightbox = ({ selectedImage, setSelectedImage }) => {
+  const [isFullImageLoaded, setIsFullImageLoaded] = useState(false);
+  
+  // Reset the loaded state when a new image is selected
+  useEffect(() => {
+    setIsFullImageLoaded(false);
+  }, [selectedImage]);
+
+  const handleDownload = async (e) => {
+    e.stopPropagation();
+    try {
+      const response = await fetch(selectedImage.path);
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = selectedImage.filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } catch (error) {
+      console.error('Error downloading image:', error);
+    }
+  };
+
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    const shareData = {
+      title: 'Hefti Academy Gallery',
+      text: 'Check out this image from Hefti Academy!',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        // Fallback for browsers that don't support Web Share API
+        await navigator.clipboard.writeText(window.location.href);
+        alert('Link copied to clipboard!');
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  return (
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
+      onClick={() => setSelectedImage(null)}
+    >
+      <div className="relative max-w-4xl max-h-[80vh] overflow-hidden" onClick={e => e.stopPropagation()}>
+        {/* Show thumbnail while full image is loading */}
+        {!isFullImageLoaded && (
+          <img 
+            src={selectedImage.thumbnailPath} 
+            alt={selectedImage.name} 
+            className="max-w-full max-h-[80vh] object-contain blur-sm"
+          />
+        )}
+        
+        {/* Full-sized image with loading handler */}
+        <img 
+          src={selectedImage.path} 
+          alt={selectedImage.name} 
+          className={`max-w-full max-h-[80vh] object-contain ${isFullImageLoaded ? 'opacity-100' : 'opacity-0'}`}
+          style={{ transition: 'opacity 0.3s ease' }}
+          onLoad={() => setIsFullImageLoaded(true)}
+        />
+        
+        {/* Image caption/description if available */}
+        {selectedImage.description && (
+          <div className="bg-black bg-opacity-70 text-white p-3 absolute bottom-0 left-0 right-0">
+            <p>{selectedImage.description}</p>
+          </div>
+        )}
+      </div>
+      
+      {/* Controls */}
+      <div className="absolute top-4 right-4 flex gap-4 items-center">
+        <button
+          onClick={handleDownload}
+          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-colors duration-200"
+          title="Download"
+        >
+          <i className="fi fi-rr-download text-gray-700"></i>
+        </button>
+        <button
+          onClick={handleShare}
+          className="bg-white/90 hover:bg-white p-2 rounded-full shadow-lg transition-colors duration-200"
+          title="Share"
+        >
+          <i className="fi fi-rr-share text-gray-700"></i>
+        </button>
+        <button
+          className="text-white text-4xl hover:text-gray-300 transition-colors"
+          onClick={(e) => {
+            e.stopPropagation();
+            setSelectedImage(null);
+          }}
+        >
+          ×
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default Gallery;

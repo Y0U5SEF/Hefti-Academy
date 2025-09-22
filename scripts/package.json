@@ -1,0 +1,7 @@
+{
+  "name": "hefti-academy-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Utility scripts for Hefti Academy website",
+  "private": true
+}

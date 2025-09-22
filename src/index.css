@@ -1,0 +1,146 @@
+@import url("https://fonts.googleapis.com/css2?family=Alexandria:wght@100..900&display=swap");
+@font-face {
+  font-family: "CaptchaFont";
+  src: url("/src/Fonts/captchaFont.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary: theme(colors.primary);
+  --secondary: theme(colors.secondary);
+  --white: theme(colors.white);
+  --black: theme(colors.black);
+  --slate: theme(colors.gradient);
+}
+
+i.fi {
+  display: block;
+  line-height: 0;
+}
+
+/* Custom styles for RTL support */
+/* html[dir="rtl"] {
+  Add RTL-specific styles here
+} */
+
+.container {
+  max-width: 100% !important;
+}
+
+/* Custom styles */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-primary text-white rounded-lg hover:opacity-90 transition-opacity;
+  }
+
+  .container-padding {
+    @apply px-4 md:px-6 lg:px-8;
+  }
+
+  .section-spacing {
+    @apply py-8 md:py-12 lg:py-16;
+  }
+}
+
+.captcha-canvas {
+  width: max-content;
+  margin: 0 auto;
+}
+
+/*=============== MOBILE ===============*/
+
+@media (max-width: 1024px) {
+  header {
+    padding: 15px !important;
+  }
+  .sticky {
+    padding: 15px calc(5% / 2);
+  }
+
+  .scroll-btn {
+    display: none;
+  }
+}
+
+@media (min-width: 1025px) {
+  .Mobile_nav_toggler {
+    display: none;
+  }
+  .mobile-nav-wrapper,
+  .overlay {
+    display: none;
+  }
+}
+
+/* remove */
+.expand {
+  width: 100%;
+  height: 2000px;
+}
+
+.page-title::after {
+  --width: 50%;
+  content: "";
+  width: var(--width);
+  right: calc((100% - var(--width)) / 2);
+  left: calc((100% - var(--width)) / 2);
+  height: 0.3rem;
+  bottom: -0.7rem;
+  background-color: var(--secondary);
+  display: block;
+  position: relative;
+}
+
+.page-title-cont {
+  background: url(assets/page-bg.svg);
+  background-repeat: no-repeat;
+  background-size: 200%;
+  background-position-x: center;
+  background-position-y: center;
+  position: relative;
+}
+
+.page-title-cont::before {
+  content: "";
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  background: linear-gradient(180deg, #ffffff00 0%, var(--slate) 80%);
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Animation Performance Optimizations */
+.motion-element {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Hardware Acceleration for Animations */
+@layer utilities {
+  .gpu-accelerated {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+    -webkit-font-smoothing: antialiased;
+  }
+}
+
+/* Optimize Animation Performance */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
