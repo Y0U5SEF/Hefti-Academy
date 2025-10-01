@@ -77,7 +77,7 @@ const LOCALIZED_TEXTS = {
 
 // Function to get image path
 const getImagePath = (imageName) => {
-  return `/images/board/${imageName}`;
+  return `Hefti-Academy/images/board/${imageName}`;
 };
 
 // Function to preload an image and check if it exists
