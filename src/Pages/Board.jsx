@@ -75,10 +75,8 @@ const LOCALIZED_TEXTS = {
   },
 };
 
-// Function to get image path
-const getImagePath = (imageName) => {
-  return `/images/board/${imageName}`;
-};
+// Function to get image path (prefix with Vite base for GitHub Pages subpath)
+const getImagePath = (imageName) => `${import.meta.env.BASE_URL}images/board/${imageName}`;
 
 // Function to preload an image and check if it exists
 const preloadImage = (src) => {

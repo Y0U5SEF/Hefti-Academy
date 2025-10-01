@@ -72,7 +72,7 @@ function App() {
   return (
     <LanguageProvider>
       <ThemeProvider>
-        <Router>
+        <Router basename={import.meta.env.BASE_URL}>
           {isLoading ? (
             <LoadingScreen />
           ) : (

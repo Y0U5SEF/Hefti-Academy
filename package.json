@@ -1,5 +1,5 @@
 {
-  "homapage": "https://Y0U5SEF.github.io/Hefti-Academy",
+  "homepage": "https://y0u5sef.github.io/Hefti-Academy/",
   "name": "hefti-academy",
   "private": true,
   "version": "0.0.0",
@@ -10,6 +10,7 @@
     "dev": "vite",
     "dev-host": "vite --host",
     "build": "vite build",
+    "postbuild": "node scripts/postbuild.cjs",
     "lint": "eslint .",
     "preview": "vite preview"
   },
